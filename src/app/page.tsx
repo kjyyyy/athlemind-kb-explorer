@@ -26,7 +26,10 @@ export default function Home() {
       <GraphPanel
         highlightWorkIds={highlight}
         focusWorkId={focusWorkId}
-        onSelectWork={setSelectedWork}
+        onSelectWork={(workId) => {
+          setSelectedWork(workId);
+          setFocusWorkId(workId);
+        }}
       />
       <WorkDrawer workId={selectedWork} onClose={() => setSelectedWork(null)} />
     </main>

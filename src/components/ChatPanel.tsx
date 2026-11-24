@@ -2,7 +2,39 @@
 
 import { FormEvent, useMemo, useState } from "react";
 
-import type { ChatResponse, EvidenceSource } from "@/lib/types";
+import { ChatProgress } from "@/components/ChatProgress";
+import type { ChatResponse, EvidenceJob, EvidenceSource, EvidenceStage } from "@/lib/types";
+
+const POLL_MS = 1500;
+const MAX_WAIT_MS = 90_000;
+const FADE_MS = 350;
+
+const ERROR_TEXT: Record<string, string> = {
+  rate_limited: "You're asking quickly — please wait a few seconds and try again.",
+  warming: "The knowledge base is starting up. Please try again in a minute.",
+  timeout: "The answer took too long. Please try again.",
+  job_lost: "The server restarted while answering. Please ask again.",
+  invalid_request: "That question couldn't be sent. Try rephrasing it.",
+  network: "Couldn't reach the server. Check your connection and try again.",
+};
+const FALLBACK_ERROR = "Something went wrong answering that. Please try again.";
+
+type Progress = {
+  stage: EvidenceStage;
+  progress: number;
+  startedAt: number;
+  state: "loading" | "done" | "error";
+};
+
+async function readJson<T>(res: Response): Promise<T | null> {
+  try {
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const SUGGESTIONS = [
   "Does cold water immersion help recovery?",
@@ -27,31 +59,62 @@ export function ChatPanel({ collapsed, onToggleCollapse, onSources, onFocusCitat
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
+  const [progress, setProgress] = useState<Progress | null>(null);
+
+  function fail(code: string | undefined) {
+    setProgress((p) => (p ? { ...p, state: "error" } : p));
+    setMessages((m) => [
+      ...m,
+      { role: "assistant", text: (code && ERROR_TEXT[code]) || FALLBACK_ERROR },
+    ]);
+  }
+
+  async function runJob(q: string): Promise<ChatResponse | string> {
+    const created = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: q, limit: 8 }),
+    });
+    const job = await readJson<EvidenceJob & { error?: string }>(created);
+    if (!created.ok || !job?.job_id) return job?.error ?? "unavailable";
+
+    const deadline = Date.now() + MAX_WAIT_MS;
+    while (Date.now() < deadline) {
+      await sleep(POLL_MS);
+      const res = await fetch(`/api/chat/jobs/${job.job_id}`);
+      const status = await readJson<EvidenceJob & { error?: string }>(res);
+      if (res.status === 429) continue;
+      if (!res.ok || !status) return status?.error ?? "unavailable";
+      if (status.status === "error") return "failed";
+      setProgress((p) => (p ? { ...p, stage: status.stage, progress: status.progress } : p));
+      if (status.status === "done" && status.result) return status.result;
+    }
+    return "timeout";
+  }
 
   async function ask(q: string) {
     if (!q.trim() || loading) return;
     setMessages((m) => [...m, { role: "user", text: q }]);
     setLoading(true);
+    setProgress({ stage: "queued", progress: 5, startedAt: Date.now(), state: "loading" });
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: q, limit: 8 }),
-      });
-      const data: ChatResponse & { error?: string; warming?: boolean } = await res.json();
-      if (!res.ok) {
-        setMessages((m) => [
-          ...m,
-          { role: "assistant", text: data.error ?? "Something went wrong." },
-        ]);
+      const outcome = await runJob(q);
+      if (typeof outcome === "string") {
+        fail(outcome);
+        await sleep(700);
         return;
       }
-      onSources(data.sources?.map((s) => s.work_id) ?? []);
+      setProgress((p) => (p ? { ...p, stage: "done", progress: 100, state: "done" } : p));
+      await sleep(FADE_MS);
+      onSources(outcome.sources?.map((s) => s.work_id) ?? []);
       setMessages((m) => [
         ...m,
-        { role: "assistant", text: data.answer, sources: data.sources },
+        { role: "assistant", text: outcome.answer, sources: outcome.sources },
       ]);
+    } catch {
+      fail("network");
     } finally {
+      setProgress(null);
       setLoading(false);
     }
   }
@@ -129,11 +192,13 @@ export function ChatPanel({ collapsed, onToggleCollapse, onSources, onFocusCitat
             )}
           </article>
         ))}
-        {loading && (
-          <div className="chat-skeleton" aria-busy="true">
-            <span className="sk-line" />
-            <span className="sk-line sk-line--short" />
-          </div>
+        {progress && (
+          <ChatProgress
+            stage={progress.stage}
+            progress={progress.progress}
+            startedAt={progress.startedAt}
+            state={progress.state}
+          />
         )}
       </div>
       <form className="chat-form" onSubmit={submit}>

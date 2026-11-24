@@ -12,6 +12,7 @@ type Props = {
 export function WorkDrawer({ workId, onClose }: Props) {
   const [detail, setDetail] = useState<WorkDetail | null>(null);
   const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     if (!workId) {
@@ -19,9 +20,15 @@ export function WorkDrawer({ workId, onClose }: Props) {
       return;
     }
     setLoading(true);
+    setFailed(false);
+    setDetail(null);
     fetch(`/api/works/${workId}`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setDetail(d))
+      .then((d: WorkDetail | null) => {
+        if (d?.work) setDetail(d);
+        else setFailed(true);
+      })
+      .catch(() => setFailed(true))
       .finally(() => setLoading(false));
   }, [workId]);
 
@@ -33,6 +40,7 @@ export function WorkDrawer({ workId, onClose }: Props) {
         Close
       </button>
       {loading && <p>Loading…</p>}
+      {failed && <p className="meta">Could not load this paper. Try again in a moment.</p>}
       {detail && (
         <>
           <h2>{detail.work.title}</h2>

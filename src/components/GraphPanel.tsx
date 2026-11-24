@@ -42,7 +42,18 @@ export function GraphPanel({
   const [edges, setEdges] = useState<GraphEdge[]>([]);
   const [resetToken, setResetToken] = useState(0);
 
-  const citationWorkId = focusWorkId ?? highlightWorkIds[0] ?? "";
+  const citationWorkId =
+    mode === "neighbourhood" ? (focusWorkId ?? highlightWorkIds[0] ?? "") : "";
+  const [entityQuery, setEntityQuery] = useState("");
+  const [topicQuery, setTopicQuery] = useState("");
+
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      setTopicQuery(topic.trim());
+      if (mode === "entities") setEntityQuery(search.trim());
+    }, 400);
+    return () => window.clearTimeout(t);
+  }, [mode, search, topic]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -50,7 +61,7 @@ export function GraphPanel({
 
     const params = new URLSearchParams({ mode });
     if (mode === "overview") {
-      if (topic.trim()) params.set("topic", topic.trim());
+      if (topicQuery) params.set("topic", topicQuery);
       params.set("limit", "80");
     }
     if (mode === "neighbourhood") {
@@ -69,8 +80,7 @@ export function GraphPanel({
       params.set("depth", String(depth));
     }
     if (mode === "entities") {
-      const q = search.trim() || topic.trim();
-      if (q) params.set("q", q);
+      if (entityQuery) params.set("q", entityQuery);
       params.set("limit", "80");
     }
 
@@ -122,7 +132,7 @@ export function GraphPanel({
       setMeta({ warming: false, error: "Network error while loading the graph.", hint: null });
     }
     setLoading(false);
-  }, [citationWorkId, depth, mode, search, topic]);
+  }, [citationWorkId, depth, entityQuery, mode, topicQuery]);
 
   useEffect(() => {
     void load();

@@ -43,25 +43,12 @@ body {
   box-shadow: 0 1px 0 rgba(255, 92, 0, 0.12);
 }
 
-.site-brand-block {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
 .site-wordmark {
   font-family: var(--font-display);
   font-size: var(--fs-md);
   font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1.25;
-}
-
-.site-tag-inline {
-  font-size: var(--fs-xs);
-  color: var(--ink-4);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 .explorer {
@@ -293,6 +280,64 @@ body {
 .chat-form button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.chat-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--surface-overlay);
+  border: 1px solid var(--border-solid);
+  transition: opacity 400ms ease;
+}
+
+.chat-progress--done {
+  opacity: 0;
+}
+
+.chat-progress-track {
+  position: relative;
+  height: 4px;
+  border-radius: var(--r-full);
+  background: rgba(255, 140, 60, 0.1);
+  overflow: hidden;
+}
+
+.chat-progress-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(255, 92, 0, 0.7), var(--primary));
+  box-shadow: 0 0 10px rgba(255, 92, 0, 0.55);
+  transition: transform 220ms linear;
+}
+
+.chat-progress--error .chat-progress-fill {
+  background: var(--danger);
+  box-shadow: none;
+}
+
+.chat-progress-label {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-2);
+  font-size: var(--fs-xs);
+  color: var(--ink-3);
+}
+
+.chat-progress-meta {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-progress-fill,
+  .chat-progress {
+    transition: none;
+  }
 }
 
 .chat-skeleton {

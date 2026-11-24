@@ -17,6 +17,10 @@ export type ForceGraphData = {
   links: Array<GraphEdge & { source: string; target: string }>;
 };
 
+function cleanLabel(label: string): string {
+  return label.replace(/["“”]/g, "").replace(/\s+/g, " ").trim();
+}
+
 export function enrichGraph(
   nodes: GraphNode[],
   edges: GraphEdge[],
@@ -55,7 +59,8 @@ export function enrichGraph(
     }
   }
 
-  const enriched: EnrichedNode[] = nodes.map((n) => {
+  const enriched: EnrichedNode[] = nodes.map((raw) => {
+    const n = raw.type === "entity" && raw.label ? { ...raw, label: cleanLabel(raw.label) } : raw;
     const name = n.label ?? n.title ?? n.id;
     const deg = degree.get(n.id) ?? 0;
     const cited = Math.log10((n.cited_by_count ?? 0) + 1);

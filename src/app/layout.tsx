@@ -31,7 +31,7 @@ export default function RootLayout({
     <html lang="en" data-theme="dark">
       <body className={`${fraunces.variable} ${dmSans.variable}`}>
         <header className="site-header">
-          <Image src="/brand/logo-mark.svg" alt="" width={32} height={32} priority aria-hidden />
+          <Image src="/brand/logo-mark.svg" alt="" width={32} height={32} priority aria-hidden style={{ height: "auto" }} />
           <span className="site-wordmark">AthleMind Knowledge Base Explorer</span>
         </header>
         {children}

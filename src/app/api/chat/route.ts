@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   const rl = rateLimit(ip);
   if (!rl.ok) {
     return NextResponse.json(
-      { error: "Too many requests" },
+      { error: "rate_limited" },
       { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
     );
   }
@@ -22,31 +22,24 @@ export async function POST(req: Request) {
   try {
     body = BodySchema.parse(await req.json());
   } catch {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   }
   try {
-    const res = await kbFetch("/v1/evidence", {
+    const res = await kbFetch("/v1/evidence/jobs", {
       method: "POST",
-      body: JSON.stringify({
-        query: body.query,
-        limit: body.limit ?? 8,
-      }),
+      body: JSON.stringify({ query: body.query, limit: body.limit ?? 8 }),
     });
     if (!res.ok) {
-      return NextResponse.json({ error: "Upstream error" }, { status: res.status });
+      return NextResponse.json({ error: "upstream_error" }, { status: res.status });
     }
-    const data = await res.json();
-    return NextResponse.json(data);
+    return NextResponse.json(await res.json());
   } catch (e) {
     if (e instanceof KbUpstreamError && e.warming) {
-      return NextResponse.json({
-        query: body.query,
-        answer:
-          "The knowledge base is warming up (loading models). Please try again in a minute.",
-        sources: [],
-        warming: true,
-      });
+      return NextResponse.json({ error: "warming" }, { status: 503 });
     }
-    return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
+    if (e instanceof KbUpstreamError && e.status === 504) {
+      return NextResponse.json({ error: "timeout" }, { status: 504 });
+    }
+    return NextResponse.json({ error: "unavailable" }, { status: 503 });
   }
 }

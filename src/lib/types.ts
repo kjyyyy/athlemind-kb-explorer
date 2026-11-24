@@ -36,6 +36,18 @@ export type ChatResponse = {
   warming?: boolean;
 };
 
+export type EvidenceStage = "queued" | "embedding" | "searching" | "reranking" | "writing" | "done";
+
+export type EvidenceJob = {
+  job_id: string;
+  status: "pending" | "done" | "error";
+  stage: EvidenceStage;
+  progress: number;
+  elapsed_s?: number;
+  result?: ChatResponse;
+  error?: string;
+};
+
 export type WorkDetail = {
   work: {
     id: string;
