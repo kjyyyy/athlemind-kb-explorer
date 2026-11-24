@@ -30,10 +30,13 @@ export type EvidenceSource = {
 };
 
 export type ChatResponse = {
+  query_id?: string;
   query: string;
   answer: string;
   sources: EvidenceSource[];
   warming?: boolean;
+  timings?: Record<string, number>;
+  model?: string;
 };
 
 export type EvidenceStage = "queued" | "embedding" | "searching" | "reranking" | "writing" | "done";

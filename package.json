@@ -2,6 +2,9 @@
   "name": "athlemind-kb-explorer",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,6 +12,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@athlemind/kb-ui": "workspace:*",
     "next": "^16.4.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 
 import { ChatProgress } from "@/components/ChatProgress";
 import { revealPassage, SourceList } from "@/components/SourceList";
+import { explorerSessionId } from "@/lib/session";
 import type { ChatResponse, EvidenceJob, EvidenceSource, EvidenceStage } from "@/lib/types";
 
 const POLL_MS = 1500;
@@ -49,6 +50,7 @@ type Props = {
   onSources: (workIds: string[]) => void;
   onFocusCitation: (workId: string) => void;
   onOpenWork: (workId: string) => void;
+  onExchangeComplete?: (question: string, result: ChatResponse) => void;
 };
 
 type Msg = {
@@ -63,6 +65,7 @@ export function ChatPanel({
   onSources,
   onFocusCitation,
   onOpenWork,
+  onExchangeComplete,
 }: Props) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -81,7 +84,7 @@ export function ChatPanel({
     const created = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: q, limit: 8 }),
+      body: JSON.stringify({ query: q, limit: 8, session_id: explorerSessionId() || undefined }),
     });
     const job = await readJson<EvidenceJob & { error?: string }>(created);
     if (!created.ok || !job?.job_id) return job?.error ?? "unavailable";
@@ -119,6 +122,7 @@ export function ChatPanel({
         ...m,
         { role: "assistant", text: outcome.answer, sources: outcome.sources },
       ]);
+      onExchangeComplete?.(q, outcome);
     } catch {
       fail("network");
     } finally {
@@ -229,6 +233,9 @@ export function ChatPanel({
           {loading ? "Thinking…" : "Ask"}
         </button>
       </form>
+      <p className="chat-storage-notice">
+        Questions are stored to improve answers. Don&apos;t include personal information.
+      </p>
     </aside>
   );
 }

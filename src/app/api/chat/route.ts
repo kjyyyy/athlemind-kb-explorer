@@ -7,6 +7,7 @@ import { clientIp, rateLimit } from "@/lib/rate-limit";
 const BodySchema = z.object({
   query: z.string().min(1).max(500),
   limit: z.number().int().min(1).max(8).optional(),
+  session_id: z.string().max(64).optional(),
 });
 
 export async function POST(req: Request) {
@@ -27,7 +28,12 @@ export async function POST(req: Request) {
   try {
     const res = await kbFetch("/v1/evidence/jobs", {
       method: "POST",
-      body: JSON.stringify({ query: body.query, limit: body.limit ?? 8 }),
+      body: JSON.stringify({
+        query: body.query,
+        limit: body.limit ?? 8,
+        client: "explorer",
+        session_id: body.session_id,
+      }),
     });
     if (!res.ok) {
       return NextResponse.json({ error: "upstream_error" }, { status: res.status });

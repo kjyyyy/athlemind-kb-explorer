@@ -1,0 +1,8 @@
+/**
+ * KB UI styles for app.athlemind.com — wrap the explorer layout in `.kb-ui`.
+ * The standalone explorer loads the same rules via its Next.js globals.css.
+ */
+.kb-ui .explorer,
+.kb-ui.explorer {
+  min-height: 100%;
+}

@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 
-import { ChatPanel } from "@/components/ChatPanel";
-import { GraphPanel } from "@/components/GraphPanel";
-import { WorkDrawer } from "@/components/WorkDrawer";
+import { ChatPanel, GraphPanel, KbClientProvider, WorkDrawer } from "@athlemind/kb-ui";
+
+import { nextKbClient } from "@/lib/kb-client";
 
 export default function Home() {
   const [highlight, setHighlight] = useState<string[]>([]);
@@ -13,27 +13,29 @@ export default function Home() {
   const [chatCollapsed, setChatCollapsed] = useState(false);
 
   return (
-    <main className={`explorer ${chatCollapsed ? "explorer--chat-collapsed" : ""}`}>
-      <ChatPanel
-        collapsed={chatCollapsed}
-        onToggleCollapse={() => setChatCollapsed((c) => !c)}
-        onSources={setHighlight}
-        onFocusCitation={setFocusWorkId}
-        onOpenWork={(workId) => {
-          setFocusWorkId(workId);
-          setSelectedWork(workId);
-        }}
-      />
-      <GraphPanel
-        highlightWorkIds={highlight}
-        focusWorkId={focusWorkId}
-        onSelectWork={(workId) => {
-          setSelectedWork(workId);
-          setFocusWorkId(workId);
-        }}
-        onFocusWork={setFocusWorkId}
-      />
-      <WorkDrawer workId={selectedWork} onClose={() => setSelectedWork(null)} />
-    </main>
+    <KbClientProvider client={nextKbClient} config={{ pollMs: 1500, maxWaitMs: 90_000 }}>
+      <main className={`explorer kb-ui ${chatCollapsed ? "explorer--chat-collapsed" : ""}`}>
+        <ChatPanel
+          collapsed={chatCollapsed}
+          onToggleCollapse={() => setChatCollapsed((c) => !c)}
+          onSources={setHighlight}
+          onFocusCitation={setFocusWorkId}
+          onOpenWork={(workId) => {
+            setFocusWorkId(workId);
+            setSelectedWork(workId);
+          }}
+        />
+        <GraphPanel
+          highlightWorkIds={highlight}
+          focusWorkId={focusWorkId}
+          onSelectWork={(workId) => {
+            setSelectedWork(workId);
+            setFocusWorkId(workId);
+          }}
+          onFocusWork={setFocusWorkId}
+        />
+        <WorkDrawer workId={selectedWork} onClose={() => setSelectedWork(null)} />
+      </main>
+    </KbClientProvider>
   );
 }
