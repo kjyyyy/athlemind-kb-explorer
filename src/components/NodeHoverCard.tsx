@@ -1,5 +1,6 @@
 "use client";
 
+import { tierLabel } from "@/lib/licence";
 import type { GraphNode } from "@/lib/types";
 
 type Props = {
@@ -13,7 +14,7 @@ export function NodeHoverCard({ node, x, y }: Props) {
   const title = node.label ?? node.title ?? node.id;
   const meta = [
     node.year,
-    node.licence_tier,
+    tierLabel(node.licence_tier),
     node.cited_by_count != null ? `${node.cited_by_count} cites` : null,
     node.type === "topic" && node.count != null ? `${node.count} papers` : null,
   ]

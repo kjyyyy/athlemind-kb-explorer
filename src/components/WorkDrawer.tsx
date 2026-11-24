@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { tierLabel } from "@/lib/licence";
 import type { WorkDetail } from "@/lib/types";
 
 type Props = {
@@ -45,7 +46,7 @@ export function WorkDrawer({ workId, onClose }: Props) {
         <>
           <h2>{detail.work.title}</h2>
           <p className="meta">
-            {detail.work.year} · {detail.work.licence_tier}
+            {[detail.work.year, tierLabel(detail.work.licence_tier)].filter(Boolean).join(" · ")}
             {detail.work.doi && <> · DOI {detail.work.doi}</>}
           </p>
           <p className="meta">Cited by {detail.work.cited_by_count ?? 0}</p>

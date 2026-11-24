@@ -2,14 +2,8 @@
 
 import { useMemo } from "react";
 
+import { tierLabel } from "@/lib/licence";
 import type { EvidenceSource } from "@/lib/types";
-
-const TIER_LABEL: Record<string, string> = {
-  open_full: "Open access",
-  open_restricted: "Open access · restricted reuse",
-  facts_only: "Abstract only",
-  metadata_only: "Citation only",
-};
 
 type Passage = { n: number; source: EvidenceSource; cited: boolean };
 type PaperGroup = { workId: string; title: string; tier: string; passages: Passage[]; cited: boolean };
@@ -66,7 +60,7 @@ export function SourceList({ messageKey, answer, sources, onFocusCitation }: Pro
                 {g.title}
               </button>
               <div className="source-group-meta">
-                <span className="tier">{TIER_LABEL[g.tier] ?? g.tier}</span>
+                <span className="tier">{tierLabel(g.tier)}</span>
                 <span className="source-chips">
                   {g.passages.map((p) => (
                     <button
