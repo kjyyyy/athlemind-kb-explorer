@@ -32,12 +32,7 @@ export default function RootLayout({
       <body className={`${fraunces.variable} ${dmSans.variable}`}>
         <header className="site-header">
           <Image src="/brand/logo-mark.svg" alt="" width={32} height={32} priority aria-hidden />
-          <div className="site-brand-block">
-            <span className="site-wordmark">AthleMind Knowledge Base Explorer</span>
-            <span className="site-tag-inline">
-              From the research library · sport psychology
-            </span>
-          </div>
+          <span className="site-wordmark">AthleMind Knowledge Base Explorer</span>
         </header>
         {children}
       </body>
