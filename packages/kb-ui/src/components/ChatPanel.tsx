@@ -5,7 +5,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { useKbClient, useKbClientConfig } from "../KbClientProvider";
 import { ChatProgress } from "./ChatProgress";
 import { revealPassage, SourceList } from "./SourceList";
-import type { ChatResponse, EvidenceJob, EvidenceSource, EvidenceStage } from "../lib/types";
+import type { ChatResponse, EvidenceSource, EvidenceStage } from "../lib/types";
 const FADE_MS = 350;
 
 const ERROR_TEXT: Record<string, string> = {
@@ -25,13 +25,6 @@ type Progress = {
   state: "loading" | "done" | "error";
 };
 
-async function readJson<T>(res: Response): Promise<T | null> {
-  try {
-    return (await res.json()) as T;
-  } catch {
-    return null;
-  }
-}
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

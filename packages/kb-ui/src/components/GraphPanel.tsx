@@ -38,7 +38,7 @@ export function GraphPanel({
   const [mode, setMode] = useState<GraphMode>("overview");
   const [topic, setTopic] = useState("");
   const [entity, setEntity] = useState("");
-  const [depth, setDepth] = useState(1);
+  const [depth] = useState(1);
   const [use3D, setUse3D] = useState(true);
   const [searchFlyId, setSearchFlyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
