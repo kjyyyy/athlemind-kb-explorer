@@ -18,7 +18,8 @@ export default function Home() {
         collapsed={chatCollapsed}
         onToggleCollapse={() => setChatCollapsed((c) => !c)}
         onSources={setHighlight}
-        onFocusCitation={(workId) => {
+        onFocusCitation={setFocusWorkId}
+        onOpenWork={(workId) => {
           setFocusWorkId(workId);
           setSelectedWork(workId);
         }}

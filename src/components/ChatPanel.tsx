@@ -47,7 +47,8 @@ type Props = {
   collapsed: boolean;
   onToggleCollapse: () => void;
   onSources: (workIds: string[]) => void;
-  onFocusCitation: (workId: string, index: number) => void;
+  onFocusCitation: (workId: string) => void;
+  onOpenWork: (workId: string) => void;
 };
 
 type Msg = {
@@ -56,7 +57,13 @@ type Msg = {
   sources?: EvidenceSource[];
 };
 
-export function ChatPanel({ collapsed, onToggleCollapse, onSources, onFocusCitation }: Props) {
+export function ChatPanel({
+  collapsed,
+  onToggleCollapse,
+  onSources,
+  onFocusCitation,
+  onOpenWork,
+}: Props) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -183,7 +190,7 @@ export function ChatPanel({ collapsed, onToggleCollapse, onSources, onFocusCitat
                 text={msg.text}
                 sources={msg.sources}
                 onCite={(workId, n) => {
-                  onFocusCitation(workId, n);
+                  onFocusCitation(workId);
                   revealPassage(String(i), n);
                 }}
               />
@@ -196,6 +203,7 @@ export function ChatPanel({ collapsed, onToggleCollapse, onSources, onFocusCitat
                 answer={msg.text}
                 sources={msg.sources}
                 onFocusCitation={onFocusCitation}
+                onOpenWork={onOpenWork}
               />
             )}
           </article>

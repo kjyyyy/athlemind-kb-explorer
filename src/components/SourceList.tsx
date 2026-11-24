@@ -35,10 +35,11 @@ type Props = {
   messageKey: string;
   answer: string;
   sources: EvidenceSource[];
-  onFocusCitation: (workId: string, index: number) => void;
+  onFocusCitation: (workId: string) => void;
+  onOpenWork: (workId: string) => void;
 };
 
-export function SourceList({ messageKey, answer, sources, onFocusCitation }: Props) {
+export function SourceList({ messageKey, answer, sources, onFocusCitation, onOpenWork }: Props) {
   const groups = useMemo(() => groupByPaper(sources, citedNumbers(answer)), [sources, answer]);
   const firstUncited = groups.findIndex((g) => !g.cited);
 
@@ -55,7 +56,8 @@ export function SourceList({ messageKey, answer, sources, onFocusCitation }: Pro
               <button
                 type="button"
                 className="source-group-title"
-                onClick={() => onFocusCitation(g.workId, g.passages[0].n)}
+                onClick={() => onOpenWork(g.workId)}
+                title="Open paper details"
               >
                 {g.title}
               </button>
@@ -67,7 +69,10 @@ export function SourceList({ messageKey, answer, sources, onFocusCitation }: Pro
                       key={p.n}
                       type="button"
                       className={`cite-chip${p.cited ? "" : " cite-chip--uncited"}`}
-                      onClick={() => onFocusCitation(g.workId, p.n)}
+                      onClick={() => {
+                        onFocusCitation(g.workId);
+                        revealPassage(messageKey, p.n);
+                      }}
                       title={p.cited ? `Passage ${p.n} (cited)` : `Passage ${p.n}`}
                     >
                       [{p.n}]
