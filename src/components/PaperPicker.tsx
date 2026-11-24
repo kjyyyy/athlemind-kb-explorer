@@ -34,7 +34,8 @@ export function PaperPicker({ selectedTitle, onPick }: Props) {
       })
         .then((r) => (r.ok ? r.json() : { results: [] }))
         .then((d: { results?: PaperHit[] }) => {
-          setHits(d.results ?? []);
+          const results = d.results ?? [];
+          setHits([...results.filter((p) => p.links > 0), ...results.filter((p) => p.links === 0)]);
           setActive(0);
         })
         .catch(() => {})
