@@ -1,5 +1,13 @@
 @import "../styles/tokens.css";
 
+:root,
+[data-theme="dark"] {
+  --kb-canvas-void: #060708;
+  --kb-canvas-grid: rgba(255, 140, 60, 0.06);
+  --kb-glow-brand: rgba(255, 92, 0, 0.22);
+  --kb-glow-mint: rgba(63, 189, 133, 0.08);
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -12,7 +20,7 @@ html,
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--art-ground);
+  background: var(--kb-canvas-void);
   color: var(--ink);
   font-family: var(--font-ui);
   font-size: var(--fs-body);
@@ -24,23 +32,36 @@ body {
   gap: var(--s-3);
   padding: var(--s-3) var(--s-5);
   border-bottom: 1px solid var(--border-solid);
-  background: var(--glass);
-  backdrop-filter: blur(12px);
+  background: linear-gradient(
+    180deg,
+    rgba(22, 16, 9, 0.92) 0%,
+    rgba(12, 10, 8, 0.78) 100%
+  );
+  backdrop-filter: blur(14px);
   position: relative;
   z-index: 30;
+  box-shadow: 0 1px 0 rgba(255, 92, 0, 0.12);
+}
+
+.site-brand-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .site-wordmark {
   font-family: var(--font-display);
-  font-size: var(--fs-lg);
+  font-size: var(--fs-md);
   font-weight: 600;
-  letter-spacing: var(--tracking-display);
+  letter-spacing: -0.01em;
+  line-height: 1.25;
 }
 
-.site-tag {
-  margin-left: auto;
-  font-size: var(--fs-sm);
-  color: var(--ink-3);
+.site-tag-inline {
+  font-size: var(--fs-xs);
+  color: var(--ink-4);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .explorer {
@@ -48,6 +69,11 @@ body {
   grid-template-columns: minmax(340px, 400px) 1fr;
   min-height: calc(100vh - 53px);
   height: calc(100vh - 53px);
+}
+
+.explorer > .graph-stage {
+  height: 100%;
+  min-height: 0;
 }
 
 .explorer--chat-collapsed {
@@ -307,7 +333,53 @@ body {
   position: relative;
   min-height: 0;
   overflow: hidden;
-  background: var(--art-ground);
+  background: var(--kb-canvas-void);
+}
+
+.graph-atmo-base,
+.graph-atmo-grid,
+.graph-atmo-glow,
+.graph-atmo-vignette,
+.graph-atmo-noise {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.graph-atmo-base {
+  z-index: 0;
+  background: radial-gradient(ellipse 120% 90% at 50% 40%, #12100e 0%, var(--kb-canvas-void) 55%);
+}
+
+.graph-atmo-grid {
+  z-index: 1;
+  opacity: 0.55;
+  background-image:
+    linear-gradient(var(--kb-canvas-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--kb-canvas-grid) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 45%, black 20%, transparent 75%);
+}
+
+.graph-atmo-glow--brand {
+  z-index: 2;
+  background: radial-gradient(circle at 15% 85%, var(--kb-glow-brand), transparent 42%);
+}
+
+.graph-atmo-glow--accent {
+  z-index: 2;
+  background: radial-gradient(circle at 88% 12%, var(--kb-glow-mint), transparent 38%);
+}
+
+.graph-atmo-vignette {
+  z-index: 3;
+  background: radial-gradient(ellipse at center, transparent 35%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+.graph-atmo-noise {
+  z-index: 4;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 .graph-float-toolbar {
@@ -320,11 +392,11 @@ body {
   flex-wrap: wrap;
   gap: var(--s-2);
   padding: var(--s-2) var(--s-3);
-  background: var(--glass);
-  border: 1px solid var(--border-solid);
+  background: rgba(18, 14, 10, 0.72);
+  border: 1px solid rgba(255, 140, 60, 0.18);
   border-radius: var(--r-md);
-  backdrop-filter: blur(12px);
-  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 246, 238, 0.06);
 }
 
 .graph-search,
@@ -409,10 +481,30 @@ body {
   transform: translate(-50%, -50%);
   color: var(--ink-3);
   font-size: var(--fs-sm);
-  z-index: 5;
+  z-index: 12;
+  max-width: min(420px, 88vw);
+  text-align: center;
+  line-height: 1.45;
+  padding: var(--s-3) var(--s-4);
+  background: rgba(10, 8, 6, 0.82);
+  border: 1px solid var(--border-solid);
+  border-radius: var(--r-md);
+  backdrop-filter: blur(10px);
+}
+
+.graph-status--error {
+  color: var(--danger);
+  border-color: rgba(224, 106, 80, 0.35);
+}
+
+.graph-status--hint {
+  color: var(--ink-2);
+  border-color: rgba(255, 140, 60, 0.22);
 }
 
 .graph-canvas {
+  position: relative;
+  z-index: 5;
   width: 100%;
   height: 100%;
   min-height: calc(100vh - 53px);

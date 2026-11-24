@@ -16,8 +16,9 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "AthleMind KB Explorer",
-  description: "Public evidence chat and citation knowledge graph for sport science research.",
+  title: "AthleMind Knowledge Base Explorer",
+  description:
+    "Evidence chat and 3D knowledge graph from the sport psychology research library.",
   icons: { icon: "/brand/favicon.svg" },
 };
 
@@ -31,8 +32,12 @@ export default function RootLayout({
       <body className={`${fraunces.variable} ${dmSans.variable}`}>
         <header className="site-header">
           <Image src="/brand/logo-mark.svg" alt="" width={32} height={32} priority aria-hidden />
-          <span className="site-wordmark">KB Explorer</span>
-          <span className="site-tag">Research library</span>
+          <div className="site-brand-block">
+            <span className="site-wordmark">AthleMind Knowledge Base Explorer</span>
+            <span className="site-tag-inline">
+              From the research library · sport psychology
+            </span>
+          </div>
         </header>
         {children}
       </body>

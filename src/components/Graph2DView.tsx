@@ -36,14 +36,19 @@ export function Graph2DView({ data, highlightWorkIds, onSelectWork }: Props) {
       <NodeHoverCard node={hovered} x={pointer.x} y={pointer.y} />
       <ForceGraph2D
         graphData={data}
-        backgroundColor={theme.brandNavy}
+        backgroundColor="rgba(0,0,0,0)"
         nodeRelSize={6}
         nodeVal="val"
-        linkColor={() => "rgba(180,210,255,0.28)"}
+        linkColor={() => "rgba(255, 140, 60, 0.18)"}
         linkWidth={0.8}
         linkDirectionalArrowLength={3}
         linkDirectionalArrowRelPos={1}
-        nodeLabel=""
+        nodeLabel={(n) => {
+          const node = n as EnrichedNode;
+          if (node.type === "topic") return String(node.label ?? node.name).slice(0, 36);
+          if (node.type === "entity") return String(node.label ?? node.name).slice(0, 48);
+          return "";
+        }}
         onNodeHover={(n) => setHovered((n as GraphNode) ?? null)}
         onNodeClick={(n) => {
           const node = n as EnrichedNode;

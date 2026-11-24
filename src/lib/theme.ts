@@ -1,6 +1,8 @@
 /** Read AthleMind CSS token values for Three.js / canvas (client only). */
 
 const FALLBACK = {
+  /** Near-black canvas — WebGL is transparent over CSS atmosphere */
+  canvasVoid: "#060708",
   brandNavy: "#042848",
   primary: "#FF5C00",
   primaryHover: "#FF6F1F",
@@ -23,6 +25,7 @@ export function readThemeColors(): ThemeColors {
   const s = getComputedStyle(document.documentElement);
   const pick = (v: string, fb: string) => s.getPropertyValue(v).trim() || fb;
   return {
+    canvasVoid: pick("--kb-canvas-void", FALLBACK.canvasVoid),
     brandNavy: pick("--brand-navy", FALLBACK.brandNavy),
     primary: pick("--primary", FALLBACK.primary),
     primaryHover: pick("--primary-hover", FALLBACK.primaryHover),
@@ -39,8 +42,9 @@ export function readThemeColors(): ThemeColors {
   };
 }
 
-export const TOPIC_PALETTE = ["dv2", "dv1", "dv3", "dv4", "warning", "info"] as const;
+export const TOPIC_PALETTE = ["success", "warning", "primary", "dv4", "dv3", "danger"] as const;
 
 export function paletteColor(theme: ThemeColors, slot: (typeof TOPIC_PALETTE)[number]): string {
+  if (slot === "primary") return theme.primary;
   return theme[slot];
 }

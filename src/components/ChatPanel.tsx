@@ -79,7 +79,7 @@ export function ChatPanel({ collapsed, onToggleCollapse, onSources, onFocusCitat
       <header className="chat-header">
         <div>
           <h1>Evidence chat</h1>
-          <p>Grounded answers with cited sources from the research library.</p>
+          <p>Grounded answers from the sport psychology research library.</p>
         </div>
         <button type="button" className="chat-collapse" onClick={onToggleCollapse} aria-label="Collapse chat">
           Hide

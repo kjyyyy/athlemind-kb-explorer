@@ -48,9 +48,28 @@ export async function GET(req: Request) {
   try {
     const res = await kbFetch(`${path}${suffix}`);
     if (!res.ok) {
+      if (q.mode === "entities") {
+        return NextResponse.json({
+          nodes: [],
+          edges: [],
+          entities_unavailable: true,
+          message:
+            "Entity graph is unavailable (triples may not be migrated or extracted yet). Use Topics mode.",
+        });
+      }
       return NextResponse.json({ error: "Upstream error" }, { status: res.status });
     }
-    return NextResponse.json(await res.json());
+    const body = await res.json();
+    if (q.mode === "entities" && body.unavailable) {
+      return NextResponse.json({
+        nodes: [],
+        edges: [],
+        entities_unavailable: true,
+        message:
+          "No extracted triples yet. Run KB triple extraction or filter by subject/object in search.",
+      });
+    }
+    return NextResponse.json(body);
   } catch (e) {
     if (e instanceof KbUpstreamError && e.warming) {
       return NextResponse.json({ nodes: [], edges: [], warming: true });

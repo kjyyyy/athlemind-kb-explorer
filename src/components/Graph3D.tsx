@@ -2,6 +2,8 @@
 
 import dynamic from "next/dynamic";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import * as THREE from "three";
+
 import type { EnrichedNode, ForceGraphData } from "@/lib/graph-model";
 import { neighbourSet } from "@/lib/graph-model";
 import { readThemeColors } from "@/lib/theme";
@@ -11,6 +13,10 @@ import { NodeHoverCard } from "@/components/NodeHoverCard";
 
 const ForceGraph3D = dynamic(() => import("react-force-graph-3d"), { ssr: false });
 
+function linkEndpointId(endpoint: string | { id: string }): string {
+  return typeof endpoint === "object" ? endpoint.id : endpoint;
+}
+
 type FGRef = {
   cameraPosition: (
     position: { x: number; y: number; z: number },
@@ -19,6 +25,7 @@ type FGRef = {
   ) => void;
   zoomToFit: (ms?: number, padding?: number, nodeFilter?: (n: object) => boolean) => void;
   controls: () => { autoRotate: boolean; autoRotateSpeed: number };
+  scene: () => THREE.Scene;
 };
 
 type Props = {
@@ -90,7 +97,7 @@ export function Graph3D({
     const id = window.setInterval(() => {
       const c = fgRef.current?.controls();
       if (c && !hovered) c.autoRotate = !reduce;
-      if (c) c.autoRotateSpeed = 0.35;
+      if (c) c.autoRotateSpeed = 0.28;
     }, 500);
     return () => {
       window.clearInterval(id);
@@ -98,6 +105,29 @@ export function Graph3D({
       if (c) c.autoRotate = false;
     };
   }, [hovered]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const g = fgRef.current;
+      if (!g) return;
+      const scene = g.scene();
+      scene.fog = new THREE.FogExp2(0x060708, 0.0016);
+      if (!scene.getObjectByName("kb-lights")) {
+        const grp = new THREE.Group();
+        grp.name = "kb-lights";
+        grp.add(new THREE.AmbientLight(0xfff0e6, 0.72));
+        const key = new THREE.DirectionalLight(0xff8a40, 0.85);
+        key.position.set(160, 220, 120);
+        grp.add(key);
+        const fill = new THREE.DirectionalLight(0x60c090, 0.25);
+        fill.position.set(-120, -80, 60);
+        grp.add(fill);
+        scene.add(grp);
+      }
+      window.clearInterval(id);
+    }, 120);
+    return () => window.clearInterval(id);
+  }, [data]);
 
   return (
     <div
@@ -108,42 +138,43 @@ export function Graph3D({
       <ForceGraph3D
         ref={fgRef as React.MutableRefObject<never>}
         graphData={data}
-        backgroundColor={theme.brandNavy}
+        backgroundColor="rgba(0,0,0,0)"
+        showNavInfo={false}
         nodeRelSize={5}
         nodeVal="val"
         nodeLabel={(n) => {
           const node = n as EnrichedNode;
-          return node.type === "topic" ? String(node.label ?? node.name).slice(0, 36) : "";
+          if (node.type === "topic") return String(node.label ?? node.name).slice(0, 36);
+          if (node.type === "entity") return String(node.label ?? node.name).slice(0, 48);
+          return "";
         }}
-        linkOpacity={0.22}
-        linkWidth={0.6}
-        linkDirectionalParticleWidth={1.2}
-        linkDirectionalArrowLength={2.5}
-        linkDirectionalArrowRelPos={0.92}
+        nodeOpacity={0.92}
         nodeColor={(n) => {
           const node = n as EnrichedNode;
           if (highlight.has(node.id)) return theme.primary;
-          if (hovered && !focusNeighbours.has(node.id)) {
-            return `${node.color}33`;
-          }
+          if (hovered && !focusNeighbours.has(node.id)) return `${node.color}44`;
           return node.color;
         }}
+        linkOpacity={0.35}
+        linkWidth={0.55}
+        linkDirectionalParticleWidth={1.4}
+        linkDirectionalParticleColor={() => theme.primaryHover}
+        linkDirectionalArrowLength={2.2}
+        linkDirectionalArrowRelPos={0.92}
         linkColor={(l) => {
-          if (!hovered) return "rgba(200,220,255,0.35)";
-          const src = String((l as { source: string | { id: string } }).source);
-          const tgt = String((l as { target: string | { id: string } }).target);
-          const sid = typeof src === "object" ? (src as { id: string }).id : src;
-          const tid = typeof tgt === "object" ? (tgt as { id: string }).id : tgt;
-          if (hovered?.id === sid || hovered?.id === tid) return theme.primary;
-          return "rgba(120,140,170,0.12)";
+          if (!hovered) return "rgba(255, 140, 60, 0.22)";
+          const { source, target } = l as { source: string | { id: string }; target: string | { id: string } };
+          const sid = linkEndpointId(source);
+          const tid = linkEndpointId(target);
+          if (hovered.id === sid || hovered.id === tid) return theme.primary;
+          return "rgba(255, 120, 40, 0.08)";
         }}
         linkDirectionalParticles={(l) => {
           if (!hovered) return 0;
-          const src = String((l as { source: string | { id: string } }).source);
-          const tgt = String((l as { target: string | { id: string } }).target);
-          const sid = typeof src === "object" ? (src as { id: string }).id : src;
-          const tid = typeof tgt === "object" ? (tgt as { id: string }).id : tgt;
-          return hovered.id === sid || hovered.id === tid ? 3 : 0;
+          const { source, target } = l as { source: string | { id: string }; target: string | { id: string } };
+          const sid = linkEndpointId(source);
+          const tid = linkEndpointId(target);
+          return hovered.id === sid || hovered.id === tid ? 4 : 0;
         }}
         onNodeHover={(n) => setHovered((n as GraphNode) ?? null)}
         onNodeClick={(n) => {

@@ -33,7 +33,11 @@ export function GraphToolbar({
         className="graph-search"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Find paper or topic…"
+        placeholder={
+          mode === "entities"
+            ? "Filter entities (subject/object)…"
+            : "Find paper, topic, or entity…"
+        }
         aria-label="Search graph"
       />
       <label className="graph-toolbar-field">

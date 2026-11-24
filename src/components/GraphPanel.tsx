@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { GraphAtmosphere } from "@/components/GraphAtmosphere";
 import { Graph2DView } from "@/components/Graph2DView";
 import { Graph3D } from "@/components/Graph3D";
 import { GraphLegend } from "@/components/GraphLegend";
@@ -18,6 +19,12 @@ type Props = {
   onResetFocus?: () => void;
 };
 
+type GraphMeta = {
+  warming: boolean;
+  error: string | null;
+  hint: string | null;
+};
+
 export function GraphPanel({
   highlightWorkIds,
   focusWorkId,
@@ -25,36 +32,97 @@ export function GraphPanel({
 }: Props) {
   const [mode, setMode] = useState<GraphMode>("overview");
   const [topic, setTopic] = useState("");
-  const [workId, setWorkId] = useState("");
   const [depth, setDepth] = useState(1);
   const [search, setSearch] = useState("");
   const [use3D, setUse3D] = useState(true);
   const [searchFlyId, setSearchFlyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [warming, setWarming] = useState(false);
+  const [meta, setMeta] = useState<GraphMeta>({ warming: false, error: null, hint: null });
   const [nodes, setNodes] = useState<GraphNode[]>([]);
   const [edges, setEdges] = useState<GraphEdge[]>([]);
   const [resetToken, setResetToken] = useState(0);
 
+  const citationWorkId = focusWorkId ?? highlightWorkIds[0] ?? "";
+
   const load = useCallback(async () => {
     setLoading(true);
+    setMeta({ warming: false, error: null, hint: null });
+
     const params = new URLSearchParams({ mode });
     if (mode === "overview") {
-      if (topic) params.set("topic", topic);
+      if (topic.trim()) params.set("topic", topic.trim());
       params.set("limit", "80");
     }
     if (mode === "neighbourhood") {
-      if (workId) params.set("work_id", workId);
+      if (!citationWorkId) {
+        setNodes([]);
+        setEdges([]);
+        setMeta({
+          warming: false,
+          error: null,
+          hint: "Citations view needs a paper — ask a question, then pick a cited source (or click a node).",
+        });
+        setLoading(false);
+        return;
+      }
+      params.set("work_id", citationWorkId);
       params.set("depth", String(depth));
     }
-    if (mode === "entities" && topic) params.set("q", topic);
-    const res = await fetch(`/api/graph?${params}`);
-    const data = await res.json();
-    setWarming(Boolean(data.warming));
-    setNodes(data.nodes ?? []);
-    setEdges(data.edges ?? []);
+    if (mode === "entities") {
+      const q = search.trim() || topic.trim();
+      if (q) params.set("q", q);
+      params.set("limit", "80");
+    }
+
+    try {
+      const res = await fetch(`/api/graph?${params}`);
+      const data = (await res.json()) as {
+        nodes?: GraphNode[];
+        edges?: GraphEdge[];
+        warming?: boolean;
+        error?: string;
+        entities_unavailable?: boolean;
+        message?: string;
+        hint?: string;
+      };
+
+      if (!res.ok) {
+        setNodes([]);
+        setEdges([]);
+        setMeta({
+          warming: false,
+          error: data.error ?? "Could not load graph data.",
+          hint: null,
+        });
+        setLoading(false);
+        return;
+      }
+
+      setNodes(data.nodes ?? []);
+      setEdges(data.edges ?? []);
+
+      let hint: string | null = data.hint ?? null;
+      if (data.entities_unavailable) {
+        hint =
+          data.message ??
+          "Entity triples are not available yet. Stay on Topics or run triple extraction on the KB.";
+      } else if (mode === "entities" && (data.nodes?.length ?? 0) === 0) {
+        hint =
+          "No entity triples matched. Try a search term (e.g. anxiety, imagery) or use Topics mode.";
+      }
+
+      setMeta({
+        warming: Boolean(data.warming),
+        error: null,
+        hint,
+      });
+    } catch {
+      setNodes([]);
+      setEdges([]);
+      setMeta({ warming: false, error: "Network error while loading the graph.", hint: null });
+    }
     setLoading(false);
-  }, [depth, mode, topic, workId]);
+  }, [citationWorkId, depth, mode, search, topic]);
 
   useEffect(() => {
     void load();
@@ -84,6 +152,7 @@ export function GraphPanel({
 
   return (
     <section className="graph-stage">
+      <GraphAtmosphere />
       <GraphToolbar
         mode={mode}
         setMode={setMode}
@@ -97,9 +166,13 @@ export function GraphPanel({
         onResetView={resetView}
       />
       <GraphLegend items={legend} />
-      {warming && <p className="graph-status">Models warming up — graph may be empty briefly.</p>}
+      {meta.warming && (
+        <p className="graph-status">Models warming up — graph may be empty briefly.</p>
+      )}
+      {meta.error && <p className="graph-status graph-status--error">{meta.error}</p>}
       {loading && <p className="graph-status">Loading graph…</p>}
-      {!loading && graphData.nodes.length === 0 && (
+      {!loading && meta.hint && <p className="graph-status graph-status--hint">{meta.hint}</p>}
+      {!loading && !meta.error && graphData.nodes.length === 0 && !meta.hint && (
         <p className="graph-status">No nodes in this view. Try Refresh or another mode.</p>
       )}
       {!loading && graphData.nodes.length > 0 && (
