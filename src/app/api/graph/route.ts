@@ -42,7 +42,7 @@ export async function GET(req: Request) {
     if (q.limit) params.set("limit", String(q.limit));
   } else {
     if (q.topic) params.set("topic", q.topic);
-    if (q.limit) params.set("limit", String(q.limit ?? 40));
+    params.set("limit", String(q.limit ?? 80));
   }
   const suffix = params.toString() ? `?${params}` : "";
   try {

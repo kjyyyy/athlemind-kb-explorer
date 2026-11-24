@@ -27,11 +27,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="dark">
       <body className={`${fraunces.variable} ${dmSans.variable}`}>
         <header className="site-header">
-          <Image src="/brand/logo-lockup.svg" alt="AthleMind" width={160} height={36} priority />
-          <span className="site-tag">Research library explorer</span>
+          <Image src="/brand/logo-mark.svg" alt="" width={32} height={32} priority aria-hidden />
+          <span className="site-wordmark">KB Explorer</span>
+          <span className="site-tag">Research library</span>
         </header>
         {children}
       </body>
