@@ -633,8 +633,64 @@ body {
   padding: var(--s-2) var(--s-3);
 }
 
-.graph-search,
-.graph-filter {
+.paper-picker-group {
+  padding: var(--s-2) var(--s-3) var(--s-1);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+.paper-picker-group:not(:first-child) {
+  margin-top: var(--s-1);
+  border-top: 1px solid var(--border-solid);
+}
+
+.graph-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 240px;
+  padding: 3px 4px 3px 10px;
+  border: 1px solid rgba(255, 140, 60, 0.4);
+  border-radius: 999px;
+  background: rgba(255, 140, 60, 0.1);
+  font-size: var(--fs-xs);
+  color: var(--ink);
+}
+
+.graph-filter-chip-label {
+  color: var(--ink-4);
+}
+
+.graph-filter-chip-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.graph-filter-chip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.graph-filter-chip button:hover {
+  background: rgba(255, 140, 60, 0.2);
+  color: var(--primary);
+}
+
+.graph-search {
   flex: 1 1 180px;
   min-width: 140px;
   padding: var(--s-1) var(--s-2);

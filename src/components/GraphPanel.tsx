@@ -7,7 +7,7 @@ import { Graph2DView } from "@/components/Graph2DView";
 import { Graph3D } from "@/components/Graph3D";
 import { GraphLegend } from "@/components/GraphLegend";
 import { GraphToolbar } from "@/components/GraphToolbar";
-import { enrichGraph, searchNodes, topicLegend } from "@/lib/graph-model";
+import { enrichGraph, topicLegend } from "@/lib/graph-model";
 import type { GraphEdge, GraphNode, PaperHit } from "@/lib/types";
 
 export type GraphMode = "overview" | "neighbourhood" | "entities";
@@ -35,8 +35,8 @@ export function GraphPanel({
   const [picked, setPicked] = useState<PaperHit | null>(null);
   const [mode, setMode] = useState<GraphMode>("overview");
   const [topic, setTopic] = useState("");
+  const [entity, setEntity] = useState("");
   const [depth, setDepth] = useState(1);
-  const [search, setSearch] = useState("");
   const [use3D, setUse3D] = useState(true);
   const [searchFlyId, setSearchFlyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -47,24 +47,13 @@ export function GraphPanel({
 
   const citationWorkId =
     mode === "neighbourhood" ? (focusWorkId ?? highlightWorkIds[0] ?? "") : "";
-  const [entityQuery, setEntityQuery] = useState("");
-  const [topicQuery, setTopicQuery] = useState("");
-
-  useEffect(() => {
-    const t = window.setTimeout(() => {
-      setTopicQuery(topic.trim());
-      if (mode === "entities") setEntityQuery(search.trim());
-    }, 400);
-    return () => window.clearTimeout(t);
-  }, [mode, search, topic]);
-
   const load = useCallback(async () => {
     setLoading(true);
     setMeta({ warming: false, error: null, hint: null });
 
     const params = new URLSearchParams({ mode });
     if (mode === "overview") {
-      if (topicQuery) params.set("topic", topicQuery);
+      if (topic) params.set("topic", topic);
       params.set("limit", "80");
     }
     if (mode === "neighbourhood") {
@@ -83,7 +72,7 @@ export function GraphPanel({
       params.set("depth", String(depth));
     }
     if (mode === "entities") {
-      if (entityQuery) params.set("q", entityQuery);
+      if (entity) params.set("q", entity);
       params.set("limit", "80");
     }
 
@@ -121,7 +110,9 @@ export function GraphPanel({
           "Entity triples are not available yet. Stay on Topics or run triple extraction on the KB.";
       } else if (mode === "entities" && (data.nodes?.length ?? 0) === 0) {
         hint =
-          "No entity triples matched. Try a search term (e.g. anxiety, imagery) or use Topics mode.";
+          "No relations found for this entity. Pick another from the search list.";
+      } else if (mode === "overview" && (data.nodes?.length ?? 0) === 0 && topic) {
+        hint = `No papers found for the topic “${topic}”. Pick another from the search list.`;
       } else if (mode === "neighbourhood" && (data.edges?.length ?? 0) === 0) {
         hint = "This paper has no citation links in the library yet — try another one.";
       }
@@ -137,7 +128,7 @@ export function GraphPanel({
       setMeta({ warming: false, error: "Network error while loading the graph.", hint: null });
     }
     setLoading(false);
-  }, [citationWorkId, depth, entityQuery, mode, topicQuery]);
+  }, [citationWorkId, depth, entity, mode, topic]);
 
   useEffect(() => {
     void load();
@@ -149,16 +140,6 @@ export function GraphPanel({
     [nodes, edges, highlight],
   );
   const legend = useMemo(() => topicLegend(graphData.nodes), [graphData.nodes]);
-
-  useEffect(() => {
-    const q = search.trim();
-    if (q.length < 2) {
-      setSearchFlyId(null);
-      return;
-    }
-    const hit = searchNodes(graphData.nodes, q, 1)[0];
-    if (hit) setSearchFlyId(hit.id);
-  }, [graphData.nodes, search]);
 
   const resetView = useCallback(() => {
     setSearchFlyId(null);
@@ -173,8 +154,12 @@ export function GraphPanel({
         setMode={setMode}
         topic={topic}
         setTopic={setTopic}
-        search={search}
-        setSearch={setSearch}
+        entity={entity}
+        setEntity={setEntity}
+        onFindPaper={(p) => {
+          setSearchFlyId(p.id);
+          onSelectWork(p.id);
+        }}
         use3D={use3D}
         setUse3D={setUse3D}
         onRefresh={load}

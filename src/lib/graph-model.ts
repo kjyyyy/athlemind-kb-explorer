@@ -105,17 +105,6 @@ export function neighbourSet(nodeId: string | null, edges: GraphEdge[]): Set<str
   return set;
 }
 
-export function searchNodes(nodes: EnrichedNode[], q: string, limit = 8): EnrichedNode[] {
-  const needle = q.trim().toLowerCase();
-  if (!needle) return [];
-  return nodes
-    .filter((n) => {
-      const hay = `${n.name} ${n.title ?? ""}`.toLowerCase();
-      return hay.includes(needle);
-    })
-    .slice(0, limit);
-}
-
 export function topicLegend(nodes: EnrichedNode[]): Array<{ label: string; color: string }> {
   const seen = new Map<string, string>();
   for (const n of nodes) {

@@ -56,6 +56,16 @@ export type PaperHit = {
   links: number;
 };
 
+export type TopicHit = {
+  label: string;
+  papers: number;
+};
+
+export type EntityHit = {
+  label: string;
+  mentions: number;
+};
+
 export type WorkDetail = {
   work: {
     id: string;
