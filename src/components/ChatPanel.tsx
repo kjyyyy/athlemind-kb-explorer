@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 
 import { ChatProgress } from "@/components/ChatProgress";
+import { revealPassage, SourceList } from "@/components/SourceList";
 import type { ChatResponse, EvidenceJob, EvidenceSource, EvidenceStage } from "@/lib/types";
 
 const POLL_MS = 1500;
@@ -181,28 +182,21 @@ export function ChatPanel({ collapsed, onToggleCollapse, onSources, onFocusCitat
               <AnswerBody
                 text={msg.text}
                 sources={msg.sources}
-                onFocusCitation={onFocusCitation}
+                onCite={(workId, n) => {
+                  onFocusCitation(workId, n);
+                  revealPassage(String(i), n);
+                }}
               />
             ) : (
               <p>{msg.text}</p>
             )}
-            {msg.sources && (
-              <ul className="source-list">
-                {msg.sources.map((s, idx) => (
-                  <li key={s.chunk_id}>
-                    <button
-                      type="button"
-                      className="source-card"
-                      onClick={() => onFocusCitation(s.work_id, idx + 1)}
-                    >
-                      <span className="cite-chip">[{idx + 1}]</span>
-                      <span className="source-title">{s.title}</span>
-                      <span className="tier">{s.licence_tier}</span>
-                    </button>
-                    {s.snippet && <p className="snippet">{s.snippet.slice(0, 200)}…</p>}
-                  </li>
-                ))}
-              </ul>
+            {msg.sources && msg.sources.length > 0 && (
+              <SourceList
+                messageKey={String(i)}
+                answer={msg.text}
+                sources={msg.sources}
+                onFocusCitation={onFocusCitation}
+              />
             )}
           </article>
         ))}
@@ -254,11 +248,11 @@ function PanelIcon({ open }: { open: boolean }) {
 function AnswerBody({
   text,
   sources,
-  onFocusCitation,
+  onCite,
 }: {
   text: string;
   sources?: EvidenceSource[];
-  onFocusCitation: (workId: string, index: number) => void;
+  onCite: (workId: string, index: number) => void;
 }) {
   const parts = useMemo(() => text.split(/(\[\d+\])/g), [text]);
   return (
@@ -274,7 +268,7 @@ function AnswerBody({
                 key={i}
                 type="button"
                 className="inline-cite"
-                onClick={() => onFocusCitation(src.work_id, idx + 1)}
+                onClick={() => onCite(src.work_id, idx + 1)}
               >
                 {part}
               </button>
