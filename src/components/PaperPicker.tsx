@@ -23,8 +23,8 @@ export function PaperPicker({ selectedTitle, onPick }: Props) {
   useEffect(() => {
     if (!open) return;
     const ctrl = new AbortController();
+    setLoading(true);
     const t = window.setTimeout(() => {
-      setLoading(true);
       fetch(`/api/works/search?${new URLSearchParams({ q: query.trim(), limit: "10" })}`, {
         signal: ctrl.signal,
       })
@@ -35,7 +35,9 @@ export function PaperPicker({ selectedTitle, onPick }: Props) {
           setActive(0);
         })
         .catch(() => {})
-        .finally(() => setLoading(false));
+        .finally(() => {
+          if (!ctrl.signal.aborted) setLoading(false);
+        });
     }, DEBOUNCE_MS);
     return () => {
       window.clearTimeout(t);
