@@ -47,6 +47,8 @@ type Msg = {
   role: "user" | "assistant";
   text: string;
   sources?: EvidenceSource[];
+  queryId?: string;
+  feedback?: "up" | "down";
 };
 
 export function ChatPanel({
@@ -107,7 +109,12 @@ export function ChatPanel({
       onSources(outcome.sources?.map((s) => s.work_id) ?? []);
       setMessages((m) => [
         ...m,
-        { role: "assistant", text: outcome.answer, sources: outcome.sources },
+        {
+          role: "assistant",
+          text: outcome.answer,
+          sources: outcome.sources,
+          queryId: outcome.query_id,
+        },
       ]);
       onExchangeComplete?.(q, outcome);
     } catch {
@@ -124,6 +131,16 @@ export function ChatPanel({
     if (!q) return;
     setInput("");
     void ask(q);
+  }
+
+  async function submitFeedback(index: number, rating: "up" | "down") {
+    const msg = messages[index];
+    if (!msg?.queryId || msg.feedback === rating) return;
+    setMessages((m) => m.map((row, i) => (i === index ? { ...row, feedback: rating } : row)));
+    const res = await kb.submitEvidenceFeedback(msg.queryId, { rating });
+    if (res.error) {
+      setMessages((m) => m.map((row, i) => (i === index ? { ...row, feedback: undefined } : row)));
+    }
   }
 
   if (collapsed) {
@@ -196,6 +213,29 @@ export function ChatPanel({
                 onFocusCitation={onFocusCitation}
                 onOpenWork={onOpenWork}
               />
+            )}
+            {msg.role === "assistant" && msg.queryId && (
+              <div className="answer-feedback" aria-label="Rate this answer">
+                <span className="answer-feedback-label">Helpful?</span>
+                <button
+                  type="button"
+                  className={`feedback-btn ${msg.feedback === "up" ? "is-active" : ""}`}
+                  aria-pressed={msg.feedback === "up"}
+                  aria-label="Thumbs up"
+                  onClick={() => void submitFeedback(i, "up")}
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  className={`feedback-btn ${msg.feedback === "down" ? "is-active" : ""}`}
+                  aria-pressed={msg.feedback === "down"}
+                  aria-label="Thumbs down"
+                  onClick={() => void submitFeedback(i, "down")}
+                >
+                  ↓
+                </button>
+              </div>
             )}
           </article>
         ))}

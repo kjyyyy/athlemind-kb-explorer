@@ -421,6 +421,47 @@ body {
   line-height: 1.4;
 }
 
+.answer-feedback {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+  padding-top: var(--s-2);
+  border-top: 1px solid var(--border-solid);
+}
+
+.answer-feedback-label {
+  font-size: var(--fs-xs);
+  color: var(--ink-4);
+  margin-right: var(--s-1);
+}
+
+.feedback-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.feedback-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.feedback-btn.is-active {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  color: var(--primary);
+}
+
 .chat-progress {
   display: flex;
   flex-direction: column;

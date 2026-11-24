@@ -39,6 +39,10 @@ export type KbClient = {
   searchEntities(q: string, limit: number, signal?: AbortSignal): Promise<EntityHit[]>;
   getGraph(params: GraphQuery): Promise<GraphResponse>;
   getWork(workId: string): Promise<WorkDetail | null>;
+  submitEvidenceFeedback(
+    queryId: string,
+    input: { rating: "up" | "down"; comment?: string },
+  ): Promise<{ recorded?: boolean; error?: string }>;
 };
 
 export type KbClientConfig = {

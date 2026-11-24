@@ -101,4 +101,19 @@ export const nextKbClient: KbClient = {
     if (!res.ok) return null;
     return (await res.json()) as WorkDetail;
   },
+
+  async submitEvidenceFeedback(queryId, { rating, comment }) {
+    const res = await fetch(`/api/evidence/queries/${encodeURIComponent(queryId)}/feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        rating,
+        comment,
+        session_id: explorerSessionId() || undefined,
+      }),
+    });
+    const body = await readJson<{ recorded?: boolean; error?: string }>(res);
+    if (!res.ok || !body?.recorded) return { error: body?.error ?? "unavailable" };
+    return { recorded: true };
+  },
 };
