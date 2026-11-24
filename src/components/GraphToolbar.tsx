@@ -1,8 +1,12 @@
 "use client";
 
 import type { GraphMode } from "@/components/GraphPanel";
+import { PaperPicker } from "@/components/PaperPicker";
+import type { PaperHit } from "@/lib/types";
 
 type Props = {
+  selectedPaperTitle: string | null;
+  onPickPaper: (paper: PaperHit) => void;
   mode: GraphMode;
   setMode: (m: GraphMode) => void;
   topic: string;
@@ -26,20 +30,24 @@ export function GraphToolbar({
   setUse3D,
   onRefresh,
   onResetView,
+  selectedPaperTitle,
+  onPickPaper,
 }: Props) {
   return (
     <div className="graph-float-toolbar">
-      <input
-        className="graph-search"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder={
-          mode === "entities"
-            ? "Filter entities (subject/object)…"
-            : "Find paper, topic, or entity…"
-        }
-        aria-label="Search graph"
-      />
+      {mode === "neighbourhood" ? (
+        <PaperPicker selectedTitle={selectedPaperTitle} onPick={onPickPaper} />
+      ) : (
+        <input
+          className="graph-search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={
+            mode === "entities" ? "Filter entities (subject/object)…" : "Find paper or topic…"
+          }
+          aria-label="Search graph"
+        />
+      )}
       <label className="graph-toolbar-field">
         <span>Mode</span>
         <select value={mode} onChange={(e) => setMode(e.target.value as GraphMode)}>

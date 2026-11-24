@@ -48,6 +48,14 @@ export type EvidenceJob = {
   error?: string;
 };
 
+export type PaperHit = {
+  id: string;
+  title: string;
+  year?: number | null;
+  cited_by_count?: number | null;
+  links: number;
+};
+
 export type WorkDetail = {
   work: {
     id: string;

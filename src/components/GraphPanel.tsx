@@ -8,7 +8,7 @@ import { Graph3D } from "@/components/Graph3D";
 import { GraphLegend } from "@/components/GraphLegend";
 import { GraphToolbar } from "@/components/GraphToolbar";
 import { enrichGraph, searchNodes, topicLegend } from "@/lib/graph-model";
-import type { GraphEdge, GraphNode } from "@/lib/types";
+import type { GraphEdge, GraphNode, PaperHit } from "@/lib/types";
 
 export type GraphMode = "overview" | "neighbourhood" | "entities";
 
@@ -16,6 +16,7 @@ type Props = {
   highlightWorkIds: string[];
   focusWorkId: string | null;
   onSelectWork: (id: string) => void;
+  onFocusWork: (id: string) => void;
   onResetFocus?: () => void;
 };
 
@@ -29,7 +30,9 @@ export function GraphPanel({
   highlightWorkIds,
   focusWorkId,
   onSelectWork,
+  onFocusWork,
 }: Props) {
+  const [picked, setPicked] = useState<PaperHit | null>(null);
   const [mode, setMode] = useState<GraphMode>("overview");
   const [topic, setTopic] = useState("");
   const [depth, setDepth] = useState(1);
@@ -71,7 +74,7 @@ export function GraphPanel({
         setMeta({
           warming: false,
           error: null,
-          hint: "Citations view needs a paper — ask a question, then pick a cited source (or click a node).",
+          hint: "Start typing a paper title above to explore who it cites and who cites it.",
         });
         setLoading(false);
         return;
@@ -119,6 +122,8 @@ export function GraphPanel({
       } else if (mode === "entities" && (data.nodes?.length ?? 0) === 0) {
         hint =
           "No entity triples matched. Try a search term (e.g. anxiety, imagery) or use Topics mode.";
+      } else if (mode === "neighbourhood" && (data.edges?.length ?? 0) === 0) {
+        hint = "This paper has no citation links in the library yet — try another one.";
       }
 
       setMeta({
@@ -174,6 +179,15 @@ export function GraphPanel({
         setUse3D={setUse3D}
         onRefresh={load}
         onResetView={resetView}
+        selectedPaperTitle={
+          picked?.id === citationWorkId
+            ? picked.title
+            : (nodes.find((n) => n.id === citationWorkId)?.title ?? null)
+        }
+        onPickPaper={(p) => {
+          setPicked(p);
+          onFocusWork(p.id);
+        }}
       />
       <GraphLegend items={legend} />
       {meta.warming && (

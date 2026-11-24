@@ -30,6 +30,7 @@ export default function Home() {
           setSelectedWork(workId);
           setFocusWorkId(workId);
         }}
+        onFocusWork={setFocusWorkId}
       />
       <WorkDrawer workId={selectedWork} onClose={() => setSelectedWork(null)} />
     </main>

@@ -130,8 +130,15 @@ export function ChatPanel({ collapsed, onToggleCollapse, onSources, onFocusCitat
   if (collapsed) {
     return (
       <aside className="chat-rail">
-        <button type="button" className="chat-rail-btn" onClick={onToggleCollapse} aria-expanded={false}>
-          Evidence chat
+        <button
+          type="button"
+          className="chat-rail-btn"
+          onClick={onToggleCollapse}
+          aria-expanded={false}
+          aria-label="Show evidence chat"
+          title="Show evidence chat"
+        >
+          <PanelIcon open={false} />
         </button>
       </aside>
     );
@@ -144,8 +151,15 @@ export function ChatPanel({ collapsed, onToggleCollapse, onSources, onFocusCitat
           <h1>Evidence chat</h1>
           <p>Grounded answers from the sport psychology research library.</p>
         </div>
-        <button type="button" className="chat-collapse" onClick={onToggleCollapse} aria-label="Collapse chat">
-          Hide
+        <button
+          type="button"
+          className="chat-collapse"
+          onClick={onToggleCollapse}
+          aria-expanded
+          aria-label="Hide evidence chat"
+          title="Hide evidence chat"
+        >
+          <PanelIcon open />
         </button>
       </header>
       <div className="chat-messages" aria-live="polite">
@@ -214,6 +228,26 @@ export function ChatPanel({ collapsed, onToggleCollapse, onSources, onFocusCitat
         </button>
       </form>
     </aside>
+  );
+}
+
+function PanelIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M9 3v18" />
+      <path d={open ? "m16 15-3-3 3-3" : "m14 9 3 3-3 3"} />
+    </svg>
   );
 }
 
