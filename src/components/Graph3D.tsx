@@ -83,6 +83,7 @@ export function Graph3D({
 
   useEffect(() => {
     if (highlightWorkIds.length === 0 || !fgRef.current) return;
+    if (!data.nodes.some((n) => highlight.has(n.id))) return;
     const t = window.setTimeout(() => {
       fgRef.current?.zoomToFit(1200, 80, (n) => {
         const id = (n as EnrichedNode).id;
@@ -90,7 +91,7 @@ export function Graph3D({
       });
     }, 400);
     return () => window.clearTimeout(t);
-  }, [highlight, highlightWorkIds]);
+  }, [highlight, highlightWorkIds, data.nodes]);
 
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
