@@ -12,17 +12,13 @@ type Props = {
 };
 
 export function PaperPicker({ selectedTitle, onPick }: Props) {
-  const [query, setQuery] = useState(selectedTitle ?? "");
+  const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [hits, setHits] = useState<PaperHit[]>([]);
   const [loading, setLoading] = useState(false);
   const [active, setActive] = useState(0);
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (selectedTitle) setQuery(selectedTitle);
-  }, [selectedTitle]);
 
   useEffect(() => {
     if (!open) return;
@@ -56,7 +52,7 @@ export function PaperPicker({ selectedTitle, onPick }: Props) {
   }, []);
 
   function pick(p: PaperHit) {
-    setQuery(p.title);
+    setQuery("");
     setOpen(false);
     onPick(p);
   }
@@ -86,12 +82,10 @@ export function PaperPicker({ selectedTitle, onPick }: Props) {
           setQuery(e.target.value);
           setOpen(true);
         }}
-        onFocus={(e) => {
-          e.target.select();
-          setOpen(true);
-        }}
+        onFocus={() => setOpen(true)}
         onKeyDown={onKeyDown}
-        placeholder="Type a paper title…"
+        placeholder={selectedTitle ? `${selectedTitle} — type to change` : "Type a paper title…"}
+        title={selectedTitle ?? undefined}
         role="combobox"
         aria-expanded={open}
         aria-controls={listId}

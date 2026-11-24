@@ -199,7 +199,9 @@ export function GraphPanel({
       {!loading && !meta.error && graphData.nodes.length === 0 && !meta.hint && (
         <p className="graph-status">No nodes in this view. Try Refresh or another mode.</p>
       )}
-      {!loading && graphData.nodes.length > 0 && (
+      {!loading &&
+        graphData.nodes.length > 0 &&
+        !(mode === "neighbourhood" && graphData.links.length === 0) && (
         <>
           {use3D ? (
             <Graph3D
