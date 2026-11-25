@@ -22,6 +22,8 @@ type Props = {
   setUse3D: (v: boolean) => void;
   onRefresh: () => void;
   onResetView: () => void;
+  answerPaperCount: number;
+  onLeaveAnswerView: () => void;
 };
 
 export function GraphToolbar({
@@ -35,6 +37,8 @@ export function GraphToolbar({
   setUse3D,
   onRefresh,
   onResetView,
+  answerPaperCount,
+  onLeaveAnswerView,
   selectedPaperTitle,
   onPickPaper,
   onFindPaper,
@@ -103,12 +107,22 @@ export function GraphToolbar({
       {mode === "entities" && entity && (
         <FilterChip label="Entity" value={entity} onClear={() => setEntity("")} />
       )}
+      {mode === "answer" && answerPaperCount > 0 && (
+        <FilterChip
+          label="Answer"
+          value={`${answerPaperCount} paper${answerPaperCount === 1 ? "" : "s"}`}
+          onClear={onLeaveAnswerView}
+        />
+      )}
       <label className="graph-toolbar-field">
         <span>Mode</span>
         <select value={mode} onChange={(e) => setMode(e.target.value as GraphMode)}>
           <option value="overview">Topics</option>
           <option value="neighbourhood">Citations</option>
           <option value="entities">Entities</option>
+          <option value="answer" disabled={answerPaperCount === 0}>
+            Answer
+          </option>
         </select>
       </label>
       <button type="button" className="graph-tool-btn" onClick={() => setUse3D(!use3D)}>

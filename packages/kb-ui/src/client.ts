@@ -10,9 +10,10 @@ import type {
 } from "./lib/types";
 
 export type GraphQuery = {
-  mode: "overview" | "neighbourhood" | "entities";
+  mode: "overview" | "neighbourhood" | "entities" | "answer";
   topic?: string;
   workId?: string;
+  workIds?: string[];
   depth?: number;
   entity?: string;
   limit?: number;

@@ -5,9 +5,10 @@ import { KbUpstreamError, kbFetch } from "@/lib/kb-proxy";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 const QuerySchema = z.object({
-  mode: z.enum(["overview", "neighbourhood", "entities"]).default("overview"),
+  mode: z.enum(["overview", "neighbourhood", "entities", "answer"]).default("overview"),
   topic: z.string().max(120).optional(),
   work_id: z.string().uuid().optional(),
+  work_ids: z.string().max(600).optional(),
   depth: z.coerce.number().int().min(1).max(2).optional(),
   q: z.string().max(120).optional(),
   limit: z.coerce.number().int().min(5).max(100).optional(),
@@ -30,7 +31,11 @@ export async function GET(req: Request) {
   const q = parsed.data;
   let path = "/v1/graph/overview";
   const params = new URLSearchParams();
-  if (q.mode === "neighbourhood") {
+  if (q.mode === "answer") {
+    path = "/v1/graph/answer";
+    if (q.work_ids) params.set("work_ids", q.work_ids);
+    params.set("limit", String(q.limit ?? 60));
+  } else if (q.mode === "neighbourhood") {
     path = "/v1/graph";
     if (q.work_id) params.set("work_id", q.work_id);
     if (q.topic) params.set("topic", q.topic);

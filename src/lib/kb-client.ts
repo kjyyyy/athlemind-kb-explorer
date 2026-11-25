@@ -87,6 +87,7 @@ export const nextKbClient: KbClient = {
     const qs = new URLSearchParams({ mode: params.mode });
     if (params.topic) qs.set("topic", params.topic);
     if (params.workId) qs.set("work_id", params.workId);
+    if (params.workIds?.length) qs.set("work_ids", params.workIds.join(","));
     if (params.depth != null) qs.set("depth", String(params.depth));
     if (params.entity) qs.set("q", params.entity);
     if (params.limit != null) qs.set("limit", String(params.limit));

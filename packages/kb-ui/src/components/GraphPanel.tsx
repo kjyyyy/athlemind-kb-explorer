@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { GraphAtmosphere } from "./GraphAtmosphere";
 import { Graph2DView } from "./Graph2DView";
@@ -9,12 +9,16 @@ import { GraphLegend } from "./GraphLegend";
 import { GraphToolbar } from "./GraphToolbar";
 import { useKbClient } from "../KbClientProvider";
 import { enrichGraph, topicLegend } from "../lib/graph-model";
+import { readThemeColors } from "../lib/theme";
 import type { GraphEdge, GraphNode, PaperHit } from "../lib/types";
 
-export type GraphMode = "overview" | "neighbourhood" | "entities";
+export type GraphMode = "overview" | "neighbourhood" | "entities" | "answer";
+
+type SavedGraphView = { mode: GraphMode; topic: string; entity: string };
 
 type Props = {
   highlightWorkIds: string[];
+  answerWorkIds: string[];
   focusWorkId: string | null;
   onSelectWork: (id: string) => void;
   onFocusWork: (id: string) => void;
@@ -29,6 +33,7 @@ type GraphMeta = {
 
 export function GraphPanel({
   highlightWorkIds,
+  answerWorkIds,
   focusWorkId,
   onSelectWork,
   onFocusWork,
@@ -36,6 +41,8 @@ export function GraphPanel({
   const kb = useKbClient();
   const [picked, setPicked] = useState<PaperHit | null>(null);
   const [mode, setMode] = useState<GraphMode>("overview");
+  const savedViewRef = useRef<SavedGraphView | null>(null);
+  const prevAnswerKeyRef = useRef("");
   const [topic, setTopic] = useState("");
   const [entity, setEntity] = useState("");
   const [depth] = useState(1);
@@ -49,9 +56,48 @@ export function GraphPanel({
 
   const citationWorkId =
     mode === "neighbourhood" ? (focusWorkId ?? highlightWorkIds[0] ?? "") : "";
+
+  const restoreFromAnswer = useCallback(() => {
+    const saved = savedViewRef.current;
+    if (saved) {
+      setMode(saved.mode);
+      setTopic(saved.topic);
+      setEntity(saved.entity);
+      savedViewRef.current = null;
+    } else if (mode === "answer") {
+      setMode("overview");
+    }
+    setResetToken((t) => t + 1);
+  }, [mode]);
+
+  useEffect(() => {
+    const key = answerWorkIds.join(",");
+    if (!key || key === prevAnswerKeyRef.current) return;
+    prevAnswerKeyRef.current = key;
+    setMode((current) => {
+      if (current !== "answer") {
+        savedViewRef.current = { mode: current, topic, entity };
+      }
+      return "answer";
+    });
+    setResetToken((t) => t + 1);
+  }, [answerWorkIds, entity, topic]);
+
   const load = useCallback(async () => {
     setLoading(true);
     setMeta({ warming: false, error: null, hint: null });
+
+    if (mode === "answer" && answerWorkIds.length === 0) {
+      setNodes([]);
+      setEdges([]);
+      setMeta({
+        warming: false,
+        error: null,
+        hint: "Ask a question in the chat to see cited papers and how they connect.",
+      });
+      setLoading(false);
+      return;
+    }
 
     if (mode === "neighbourhood" && !citationWorkId) {
       setNodes([]);
@@ -70,9 +116,10 @@ export function GraphPanel({
         mode,
         topic: mode === "overview" ? topic || undefined : undefined,
         workId: mode === "neighbourhood" ? citationWorkId : undefined,
+        workIds: mode === "answer" ? answerWorkIds : undefined,
         depth: mode === "neighbourhood" ? depth : undefined,
         entity: mode === "entities" ? entity || undefined : undefined,
-        limit: 80,
+        limit: mode === "answer" ? 60 : 80,
       });
 
       if (data.error) {
@@ -102,6 +149,12 @@ export function GraphPanel({
         hint = `No papers found for the topic “${topic}”. Pick another from the search list.`;
       } else if (mode === "neighbourhood" && (data.edges?.length ?? 0) === 0) {
         hint = "This paper has no citation links in the library yet — try another one.";
+      } else if (
+        mode === "answer" &&
+        (data.nodes?.length ?? 0) > 0 &&
+        !(data.edges ?? []).some((e) => e.kind === "cites")
+      ) {
+        hint = "No citation links found among these papers yet — cited papers are still highlighted.";
       }
 
       setMeta({
@@ -115,7 +168,7 @@ export function GraphPanel({
       setMeta({ warming: false, error: "Network error while loading the graph.", hint: null });
     }
     setLoading(false);
-  }, [citationWorkId, depth, entity, kb, mode, topic]);
+  }, [answerWorkIds, citationWorkId, depth, entity, kb, mode, topic]);
 
   useEffect(() => {
     void load();
@@ -126,7 +179,14 @@ export function GraphPanel({
     () => enrichGraph(nodes, edges, highlight),
     [nodes, edges, highlight],
   );
-  const legend = useMemo(() => topicLegend(graphData.nodes), [graphData.nodes]);
+  const legend = useMemo(() => {
+    const base = topicLegend(graphData.nodes);
+    if (mode === "answer" && highlightWorkIds.length > 0) {
+      const theme = readThemeColors();
+      return [{ label: "Cited in answer", color: theme.primary }, ...base];
+    }
+    return base;
+  }, [graphData.nodes, highlightWorkIds.length, mode]);
 
   const resetView = useCallback(() => {
     setSearchFlyId(null);
@@ -143,6 +203,8 @@ export function GraphPanel({
         setTopic={setTopic}
         entity={entity}
         setEntity={setEntity}
+        answerPaperCount={answerWorkIds.length}
+        onLeaveAnswerView={restoreFromAnswer}
         onFindPaper={(p) => {
           setSearchFlyId(p.id);
           onSelectWork(p.id);
@@ -173,7 +235,10 @@ export function GraphPanel({
       )}
       {!loading &&
         graphData.nodes.length > 0 &&
-        !(mode === "neighbourhood" && graphData.links.length === 0) && (
+        !(
+          mode === "neighbourhood" &&
+          graphData.links.length === 0
+        ) && (
         <>
           {use3D ? (
             <Graph3D

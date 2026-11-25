@@ -27,6 +27,7 @@ export default function Home() {
         />
         <GraphPanel
           highlightWorkIds={highlight}
+          answerWorkIds={highlight}
           focusWorkId={focusWorkId}
           onSelectWork={(workId) => {
             setSelectedWork(workId);
